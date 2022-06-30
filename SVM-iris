@@ -1,0 +1,89 @@
+# SVM-iris
+
+import numpy as np 
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import load_iris
+
+#Optional, only for jupyter users
+%matplotlib inline
+
+#Load the Dataset
+iris=load_iris()
+
+#Creating Pandas DataFrame
+df=pd.DataFrame(iris.data,columns=iris.feature_names)
+#View of the df 
+df.head()
+
+#Creating DataFrame
+Target= pd.DataFrame(iris.target,columns=['Target'])
+#View of the Target
+Target.head()
+
+#Merging it in the df
+df= pd.concat([df,Target],axis=1)
+#Update View of df
+df.head()
+
+#Mapping the Flower Name to the Target Values
+def flow(x):
+    return iris.target_names[x]
+
+df['flower_name']=df.Target.apply(flow)
+#View of the Updated df with flower_name
+df.head()
+
+#Visualistions
+sns.pairplot(df, hue='Target')
+
+#Scatter Plot Distribution Across 3 categories
+sns.scatterplot(data=df[:51], x="sepal length (cm)", y="sepal width (cm)", color='red')
+sns.scatterplot(data=df[51:101], x="sepal length (cm)", y="sepal width (cm)", color='green')
+sns.scatterplot(data=df[101:151], x="sepal length (cm)", y="sepal width (cm)", color='blue')
+
+
+#Train test split
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test= train_test_split(df.drop(['Target','flower_name'],axis=1),df['Target'],test_size=0.2)
+
+#Training data Set 
+X_train
+
+#Test data Set 
+X_test
+
+from sklearn.svm import SVC
+svm_learn=SVC()
+
+#training phase
+svm_learn.fit(X_train,y_train)
+
+#Predction Phase
+predcitions= svm_learn.predict(X_test)
+
+#Confusion matrix
+from sklearn.metrics import confusion_matrix
+confuse= confusion_matrix(y_test,predcitions)
+print(confuse)
+
+#Heat Map
+plt.figure(figsize=(9,7))
+sns.heatmap(confuse,annot= True)
+plt.xlabel('predcitions')
+plt.ylabel('y_test')
+
+
+#Classification Report 
+from sklearn.metrics import classification_report
+print(classification_report(y_test,predcitions))
+
+#Calculate the Model scores for Regularization (C)
+cap =[]
+for i in range(1,50):
+    svm_learn =SVC(C=i)
+    svm_learn.fit(X_train,y_train)
+    predcitions= svm_learn.predict(X_test)
+    cap.append(svm_learn.score(X_test, y_test))
+print(cap)
